@@ -644,6 +644,17 @@ DT::datatable(ar_summary)
 
 <!--html_preserve-->
 
+<iframe seamless src="../ar_widget/index.html" width="400" height="500"></iframe>
+
+<!--/html_preserve-->
+
+```{r}
+
+```
+
+
+<!--html_preserve-->
+
 <iframe seamless src="https://opcpolestar.netlify.app/post/accounts-receivable-review/ar_widget.html" width="400" height="500"></iframe>
 
 <!--/html_preserve-->
