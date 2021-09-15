@@ -787,11 +787,22 @@ ar_summary %>%
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-10-1.png" width="672" />
 
 ``` r
-display_table(ar_summary) %>% widgetframe::frameWidget()
+t <- display_table(ar_summary) 
+```
+
+``` r
+widgetframe::frameWidget(t)
 ```
 
 <div id="htmlwidget-4" style="width:100%;height:480px;" class="widgetframe html-widget"></div>
-<script type="application/json" data-for="htmlwidget-4">{"x":{"url":"index_files/figure-html//widgets/widget_unnamed-chunk-10.html","options":{"xdomain":"*","allowfullscreen":false,"lazyload":false}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-4">{"x":{"url":"index_files/figure-html//widgets/widget_unnamed-chunk-11.html","options":{"xdomain":"*","allowfullscreen":false,"lazyload":false}},"evals":[],"jsHooks":[]}</script>
+
+``` r
+htmlwidgets::saveWidget(frameableWidget(t),'ar_1.html')
+```
+
+<iframe seamless src="/ar_1.html" width="100%" height="500">
+</iframe>
 
 Those large drops in A/R jump out even more here. Again, worth researching those.
 
