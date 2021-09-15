@@ -96,6 +96,18 @@ display_table <- function(x){
   table_output
 }
 
+## Trying to get widgets to work
+save_and_use_widget <- function(x, filename) {
+  root     <- rprojroot::has_file("netlify.toml")
+  the_dir  <- root$find_file("static", "post", "widgets")
+  the_file <- root$find_file("static", "post", "widgets", filename)
+  dir.create(the_dir, showWarnings = FALSE)
+  htmlwidgets::saveWidget(x, the_file, selfcontained = TRUE)
+  htmltools::tags$iframe(src = file.path("widgets", filename),
+                         width = "100%",
+                         height = "500px")
+}
+
 ```
 
 ## Read and Tidy Data
@@ -619,6 +631,11 @@ htmlwidgets::saveWidget(widget = t,
 ```{r}
 DT::datatable(ar_summary)
 ```
+
+```{r}
+save_and_use_widget(t, "ar_widget.html")
+```
+
 
 
 Those large drops in A/R jump out even more here. Again, worth researching those.
