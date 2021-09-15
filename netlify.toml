@@ -15,6 +15,11 @@
 [context.branch-deploy]
   command = "hugo --gc --minify -b $DEPLOY_PRIME_URL"
 
+[headers.values]
+  X-Frame-Options = "SAMEORIGIN"
+  X-XSS-Protection = "1; mode=block"
+  Referrer-Policy = "strict-origin-when-cross-origin"
+
 [[plugins]]
   package = "netlify-plugin-hugo-cache-resources"
   [plugins.inputs]
