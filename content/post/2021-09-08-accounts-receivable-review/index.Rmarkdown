@@ -603,11 +603,15 @@ widgetframe::frameWidget(t)
 ```{r}
 
 htmlwidgets::saveWidget(frameableWidget(t),'ar_1.html')
+htmlwidgets::saveWidget(t, file = "ar1.html", selfcontained = FALSE)
 
 ```
 
 
-<iframe seamless src="/ar_1.html" width="100%" height="500"></iframe>
+<iframe seamless src="../ar1.html" width="100%" height="500"></iframe>
+
+<iframe seamless src="../ar_1.html" width="100%" height="500"></iframe>
+
 
 Those large drops in A/R jump out even more here. Again, worth researching those.
 
