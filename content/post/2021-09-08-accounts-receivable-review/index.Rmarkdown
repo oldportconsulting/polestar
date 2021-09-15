@@ -63,6 +63,7 @@ These are just a few packages that we'll be using as well as a function I create
 library(tidyverse)
 library(DT)
 library(widgetframe)
+library(htmlwidgets)
 library(testthat)
 library(scales)
 library(janitor)
@@ -602,13 +603,20 @@ widgetframe::frameWidget(t)
 
 ```{r}
 
-htmlwidgets::saveWidget(frameableWidget(t),'ar_1.html')
-htmlwidgets::saveWidget(t, file = "ar1.html", selfcontained = FALSE)
+htmlwidgets::saveWidget(widget = t,
+                        file = "ar_table.html",
+                        selfcontained = TRUE)
 
 ```
+<!--html_preserve-->
 
+<iframe seamless src="ar_table.html" width="400" height="500"></iframe>
 
-<iframe seamless src="./ar_1.html" width="100%" height="500"></iframe>
+<!--/html_preserve-->
+
+```{r}
+DT::datatable(ar_summary)
+```
 
 
 Those large drops in A/R jump out even more here. Again, worth researching those.
