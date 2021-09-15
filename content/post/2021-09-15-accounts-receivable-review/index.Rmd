@@ -615,49 +615,6 @@ widgetframe::frameWidget(t)
 
 ```
 
-```{r}
-
-htmlwidgets::saveWidget(widget = t,
-                        file = "ar_table.html",
-                        selfcontained = TRUE)
-
-```
-<!--html_preserve-->
-
-<iframe seamless src="ar_widget.html" width="400" height="500"></iframe>
-
-<!--/html_preserve-->
-
-```{r}
-DT::datatable(ar_summary)
-```
-
-<!--html_preserve-->
-
-<iframe seamless src="../ar_widget.html" width="400" height="500"></iframe>
-
-<!--/html_preserve-->
-
-```{r}
-
-```
-
-<!--html_preserve-->
-
-<iframe seamless src="../ar_widget/index.html" width="400" height="500"></iframe>
-
-<!--/html_preserve-->
-
-```{r}
-
-```
-
-
-<!--html_preserve-->
-
-<iframe seamless src="https://opcpolestar.netlify.app/post/accounts-receivable-review/ar_widget.html" width="400" height="500"></iframe>
-
-<!--/html_preserve-->
 
 Those large drops in A/R jump out even more here. Again, worth researching those.
 
