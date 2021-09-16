@@ -32,6 +32,7 @@ module:
 
 enableGitInfo: false
 summaryLength: 30
+exclude_jquery: true
 paginate: 10
 enableEmoji: true
 enableRobotsTXT: true
