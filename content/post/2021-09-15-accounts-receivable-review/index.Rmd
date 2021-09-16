@@ -605,7 +605,7 @@ widgetframe::frameWidget(t)
 ```
 
 ```{r}
-htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = TRUE)
+htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = FALSE)
 ```
 
 ```{r}
@@ -617,7 +617,7 @@ htmltools::tags$iframe(src = "../ar_review.html",
 
 <!--html_preserve-->
 
-<iframe src = "../ar_review.html" width="400" height="500"> </frame>
+<iframe src = "https://opcpolestar.netlify.app/post/accounts-receivable-review/ar_review.html" width="400" height="500"> </frame>
 
 <!--html_preserve-->
 
