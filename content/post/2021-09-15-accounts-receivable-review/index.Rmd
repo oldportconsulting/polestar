@@ -61,9 +61,10 @@ These are just a few packages that we'll be using as well as a function I create
 ## Package Load
 
 ```{r setup, message=FALSE, warning=FALSE}
-
 library(tidyverse)
 library(DT)
+library(widgetframe)
+library(htmlwidgets)
 library(testthat)
 library(scales)
 library(janitor)
@@ -72,8 +73,6 @@ library(lubridate)
 library(tsoutliers)
 library(RcppRoll)
 library(knitr)
-
-
 ##Functions
 display_table <- function(x){
   table_output <- 
@@ -93,8 +92,6 @@ display_table <- function(x){
   
   table_output
 }
-
-
 ```
 
 ## Read and Tidy Data
@@ -102,16 +99,11 @@ display_table <- function(x){
 We have to pull in the data from excel, clean up a lot of names, and then I prefer to make it long and tidier
 
 ```{r}
-
 beg_date <- mdy("01-01-2016")
 end_date <- mdy("06-30-2020")
-
 company_name <- "ABC Corp"
-
 balance_sheet <- read_xlsx("./Financial_Data/monthly_balance_sheet.xlsx")
-
 balance_sheet %>% head() %>%  knitr::kable()
-
 ##Need to rename and then concatenate all columns that might contain an account name
 long_balance_sheet <- 
   balance_sheet %>% 
@@ -120,14 +112,9 @@ long_balance_sheet <-
   pivot_longer(-Account, names_to = "month", values_to = "amount") %>% 
   mutate(month = mdy(month)) %>% 
   filter(!is.na(amount))
-
-
 profit_and_loss <- read_xlsx("./Financial_Data/monthly_profit_loss.xlsx")
-
 profit_and_loss %>% head() %>%  knitr::kable()
-
 ##Need to rename and then concatenate all columns that might contain an account name. 
-
 long_profit_and_loss <- 
   profit_and_loss %>% 
   rename_with(~paste0("acct",.),contains("..")) %>% 
@@ -136,7 +123,6 @@ long_profit_and_loss <-
   mutate(month = ceiling_date(dmy(paste(1,month)), unit = "month")-1) %>% 
   filter(!is.na(amount)) %>% 
   filter(!is.na(month))  
-
 ```
 
 
@@ -151,13 +137,10 @@ long_profit_and_loss <-
 The following trending analysis uses the outlier detection function of the tsoutliers package to help highlight unusual A/R (and potentially unusual revenue months) 
 
 ```{r}
-
 ar_acct <- "1200 · Accounts Receivable"
-
 ar_history <- 
   long_balance_sheet %>% 
   filter(Account == ar_acct)
-
 ##Outlier Detection Function
 find_outlier <- function (df, value_field, time_field) {
   # browser()
@@ -174,15 +157,11 @@ find_outlier <- function (df, value_field, time_field) {
   df <- df %>% filter(outlier)
   return(df)
 }
-
 outliers <- find_outlier(ar_history, amount, month)
-
 outliers
-
 chart_data <- 
   ar_history %>%
   left_join(outliers %>% select(-amount), by = c("month"))
-
 chart_data  %>% 
   ggplot(aes(month, amount)) + 
   geom_point(size = 1)+
@@ -200,8 +179,6 @@ chart_data  %>%
   ggtitle( paste(company_name, ' - Monthly AR'),
            subtitle='With outlier months marked.') +
   guides(color = guide_legend(""))
-
-
 ```
 
 We can see the company is carrying a historically low level of A/R. A/R peaked around December 2017. Of particular importance are spikes or drops around key dates, such as TTM periods or fiscal year ends, as they are more likely to impact key financial metrics being used by the buyer.  We are using automated outlier detection but don't ignore what your eye sees.  That spike around 12/31/17 may not be an outlier vs other points around it but it trips a lot of red flags and I'd research it
@@ -211,35 +188,26 @@ There might be some seasonal trends, which we can review a few ways, the first i
 #### Days Sales
 
 ```{r}
-
 num_months_roll <- 3
 revenue_acct <- "Total Income"
-
 rolling_avg_sales <- 
   long_profit_and_loss %>% 
   filter(Account == revenue_acct) %>% 
   mutate(x_month_avg_sales =  RcppRoll::roll_sum(amount, num_months_roll, align = "right", fill =NA)/2)
-
 ar_history_sales <- 
   left_join(ar_history, 
             rolling_avg_sales %>%
               select(month, x_month_avg_sales))
-
 ar_history_sales_days <- 
   ar_history_sales %>% 
   mutate(amount = amount / x_month_avg_sales * (num_months_roll*30)) %>% 
   select(month, amount) %>% 
   filter(!is.na(amount))
-
 outliers <- find_outlier(ar_history_sales_days, amount, month)
-
 outliers
-
 chart_data <- 
   ar_history_sales_days %>%
   left_join(outliers %>% select(-amount), by = c("month"))
-
-
 chart_data  %>% 
   ggplot(aes(month, amount)) + 
   geom_point(size = 1)+
@@ -256,7 +224,6 @@ chart_data  %>%
   scale_y_continuous(label=scales::comma)+
   ggtitle( paste(company_name, ' - Monthly AR')) +
   guides(color = guide_legend(""))
-
 ```
 
 From this perspective, looking at A/R in relation to 3 months worth of sales, we see that some of the previous spikes were likely driven organically by revenue. It is still worth researching those periods, the largest A/R balances, oldest balances and largest sales in them but now we also have two more periods where the A/R was high compared to the sales.  I'd add those to my punch list of questions for the seller as well, again reviewing the largest A/R balances and sales in those periods.
@@ -268,27 +235,21 @@ Let's look at the seasonality of A/R next
 We're going to initially normalize based on rolling TTM sales. This would still show seasonal trends but it would help adjust for long-term changes in the level of sales.
 
 ```{r}
-
-
 num_months_roll <- 12
 revenue_acct <- "Total Income"
-
 rolling_avg_sales <- 
   long_profit_and_loss %>% 
   filter(Account == revenue_acct) %>% 
   mutate(x_month_avg_sales =  RcppRoll::roll_sum(amount, num_months_roll, align = "right", fill =NA)/2)
-
 ar_history_sales <- 
   left_join(ar_history, 
             rolling_avg_sales %>%
               select(month, x_month_avg_sales))
-
 ar_history_sales_days <- 
   ar_history_sales %>% 
   mutate(amount = amount / x_month_avg_sales * (num_months_roll*30)) %>% 
   select(month, amount) %>% 
   filter(!is.na(amount))
-
 ar_history_sales_days %>% 
   ggplot(aes(month(month, label=TRUE, abbr=TRUE), 
              amount, 
@@ -300,7 +261,6 @@ ar_history_sales_days %>%
   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))+
   ggtitle( paste(company_name, ' - Monthly AR')) +
   guides(color = guide_legend(""))
-
 ```
 
 There might be some trends around the winter months being higher but it isn't crystal clear and may still be being swamped by long-term trends.
@@ -312,7 +272,6 @@ At this point the general exploration of accounts receivable has been handy, par
 Our first issue is we'd love to get an A/R aging on a timely basis, daily perhaps, that would allow for flexible comparisons of any two time periods, however there is no way to export QuickBooks A/R agings in that way, only a specific date can be exported.  Let's see if we can recreate the A/R aging using the accrual and cash sales detail.
 
 ```{r}
-
 revenue_accrual <- 
   readxl::read_xlsx(path = "./Financial_Data/sales_detail_accrual.xlsx") %>% 
   select(Type:Amount) %>%
@@ -321,7 +280,6 @@ revenue_accrual <-
   mutate(Amount = if_else(is.na(Amount),0,Amount)) %>% 
   rename_all(tolower) %>% 
   mutate(month = lubridate::ceiling_date(date, unit = 'month')-1)
-
 revenue_cash <- 
   readxl::read_xlsx(path = "./Financial_Data/sales_detail_cash.xlsx") %>% 
   rename(Amount = `Paid Amount`) %>% 
@@ -331,7 +289,6 @@ revenue_cash <-
   mutate(Amount = if_else(is.na(Amount),0,Amount)) %>% 
   rename_all(tolower) %>% 
   mutate(month = lubridate::ceiling_date(date, unit = 'month')-1)
-
 complete_daily_df <- 
   crossing(date = seq.Date(beg_date, end_date, by = "1 day"), name =unique(revenue_accrual$name)) %>% 
   left_join(revenue_accrual %>% select(date, name, num, amount) %>% 
@@ -348,26 +305,22 @@ complete_daily_df <-
   mutate(collection = if_else(is.na(amount),0, -amount)) %>% 
   select(-amount) %>% 
   filter(!(sales==0 & collection ==0))
-
-display_table(complete_daily_df)
-
+display_table(complete_daily_df) 
+# %>% widgetframe::frameWidget()
 complete_daily_df %>% 
   # group_by(name, num) %>% 
   summarise(sales = sum(sales),
             collection = sum(collection)) %>% 
   mutate(AR = sales+collection)
-
 ```
 
 If we pull in the actual A/R aging we can compare the two
 
 ```{r}
-
 ar_aging_actual <- read_xlsx("./Financial_Data/ar_aging_2020_06_30.xlsx") %>% 
   rename(name = `...2`) %>% 
   rename_all(.funs = tolower) %>% 
   select(name:total)
-
 ar_aging <- 
   complete_daily_df %>% 
   group_by(name) %>% 
@@ -376,24 +329,19 @@ ar_aging <-
   mutate(calc_ar = sales+collection) %>% 
   filter(calc_ar !=0) %>% 
   select(name, calc_ar)
-
 ar_comparison <- 
   ar_aging_actual %>% 
   select(name, total) %>% 
   rename(actual_ar = total) %>% 
   full_join(ar_aging, by = c("name")) 
-
-
 ar_comparison[is.na(ar_comparison)] <- 0
-
 ar_comparison <- 
   ar_comparison %>% 
   filter(name != "TOTAL") %>% 
   mutate(dif = actual_ar-calc_ar) %>% 
   arrange(desc(dif)) 
-
 display_table(ar_comparison %>% mutate_if(is.numeric,scales::comma)) 
-
+# %>% widgetframe::frameWidget()
 ```
 
 So that came out particularly close, most of the differences actually relate to unusual negative A/R balances in the A/R aging.  These would be worth researching to determine if it is understated accrual revenue or some form of prepaid revenue liability.
@@ -401,17 +349,14 @@ So that came out particularly close, most of the differences actually relate to 
 Let's see the probability of an invoice being collected as it ages.  We'll only use sales data up to the last 6 months as a cutoff to exclude invoices that are likely to be collected but for which not enough time has passed.
 
 ```{r}
-
 daily_ar <- 
   complete_daily_df %>% 
   group_by(name, num) %>% 
   mutate(calc_ar = cumsum(sales)+cumsum(collection)) %>% 
   arrange(name, num, date)
-
 complete_ar_history <- 
   daily_ar %>% expand(nesting(name,  num), date = seq.Date(beg_date, end_date %m-% months(6), by = "1 day")) %>% 
   left_join(daily_ar %>% select(-sales,-collection))
-
 paid_ar <- 
   ar_aging <- 
   complete_daily_df %>% 
@@ -421,7 +366,6 @@ paid_ar <-
   mutate(calc_ar = sales+collection) %>% 
   filter(calc_ar == 0) %>% 
   mutate(status = "paid")
-
 ar_daily_df <- 
   complete_ar_history %>% 
   fill(calc_ar, .direction = "down") %>% 
@@ -431,7 +375,6 @@ ar_daily_df <-
   ungroup() %>% 
   left_join(paid_ar %>% select(name, num, status)) %>% 
   mutate(status = if_else(is.na(status), "outstanding", status))
-
 ar_daily_df %>% 
   group_by(days_outstanding, status) %>% 
   summarise(calc_ar = sum(calc_ar)) %>%
@@ -444,16 +387,14 @@ ar_daily_df %>%
   scale_fill_viridis_d(option = "plasma")+
   scale_y_continuous(label=scales::percent)+
   ggtitle( paste(company_name, ' - Collection % by Days Outstanding')) 
-
 ar_summary <- 
   ar_daily_df %>% 
   group_by(days_outstanding, status) %>% 
   summarise(calc_ar = sum(calc_ar)) %>%
   group_by(days_outstanding) %>% 
   mutate(perc = calc_ar/sum(calc_ar))
-
 display_table(ar_summary)  
-
+# %>% widgetframe::frameWidget()
 ar_summary %>% 
   filter(status == "paid") %>% 
   ggplot(aes(days_outstanding, perc, group = status, color = status, weight = calc_ar)) +
@@ -464,8 +405,6 @@ ar_summary %>%
   scale_y_continuous(label=scales::percent)+
   scale_color_viridis_d(option="plasma")+
   ggtitle( paste(company_name, ' - Collection % by Days Outstanding')) 
-
-
 ```
 
 This is a result that we'd expect, as the invoices age, they are less likely to be collected.  There are some huge drops, and those might be due to small sample sizes after certain points.  Or the company may have written invoices off and treated them as cash payments.
@@ -482,8 +421,6 @@ Since we have the ability, let's put together a simple model to predict whether 
 
 
 ```{r}
-
-
 ar_summary %>% 
    filter(status == "paid") %>% 
   ggplot(aes(sqrt((as.numeric(days_outstanding))), perc, group = status, color = status, weight = calc_ar)) +
@@ -494,19 +431,15 @@ ar_summary %>%
   scale_y_continuous(label=scales::percent)+
   scale_color_viridis_d(option="plasma")+
   ggtitle( paste(company_name, ' - Collection % by Days Outstanding')) 
-
-
 ```
 
 That does seem a more linear representation, let's use that.
 
 ```{r}
-
 complete_ar_history <- 
   daily_ar %>% expand(nesting(name,  num), 
                       date = seq.Date(beg_date, end_date %m-% months(6), by = "1 day")) %>% 
   left_join(daily_ar)
-
 ar_daily_df <- 
   complete_ar_history %>% 
   fill(calc_ar, .direction = "down") %>% 
@@ -519,13 +452,9 @@ ar_daily_df <-
   filter(calc_ar > 1) %>% 
   mutate(sqrt_days = sqrt(days_outstanding)) %>% 
   mutate(perc_collection = pmin(future_collection / calc_ar,1))
-
 fit <- lm(formula = future_collection ~ sqrt_days * calc_ar  , data =  ar_daily_df )
-
 summary(fit)
-
 ar_daily_df$pred_collection <- round(predict(fit, newdata = ar_daily_df),2)
-
 ar_summary <- 
   ar_daily_df %>% 
   group_by(days_outstanding) %>% 
@@ -540,7 +469,6 @@ ar_summary <-
   pivot_longer(cols = actual:prediction, 
                names_to = "type", 
                values_to = "perc_collected")
-
 ar_summary %>% 
   ggplot(aes(days_outstanding, perc_collected, group = type, color = type, weight = calc_ar)) +
   geom_point() +
@@ -550,18 +478,15 @@ ar_summary %>%
   scale_y_continuous(label=scales::percent)+
   scale_color_viridis_d(option="plasma")+
   ggtitle( paste(company_name, ' - Collection % by Days Outstanding')) 
-
 ```
 
 That seems like a pretty good estimate for us to use.  Let's apply that prediction to the entire set of data and calculate an A/R reserve over time. The difference in the A/R reserve between any two time points is a reasonable estimate of additional bad debt expense that should have been accrued in that period.
 
 ```{r}
-
 complete_ar_history <- 
   daily_ar %>% expand(nesting(name,  num), 
                       date = seq.Date(beg_date, end_date, by = "1 day")) %>%   #took out 6 month cutback
   left_join(daily_ar)
-
 ar_daily_df <- 
   complete_ar_history %>% 
   fill(calc_ar, .direction = "down") %>% 
@@ -572,7 +497,6 @@ ar_daily_df <-
   mutate(sqrt_days = sqrt(days_outstanding))
  
 ar_daily_df$pred_collection <- round(predict(fit, newdata = ar_daily_df),2)
-
 ar_summary <- 
   ar_daily_df %>% 
   group_by(date) %>% 
@@ -580,7 +504,6 @@ ar_summary <-
   summarise(calc_ar = sum(calc_ar),
             pred_collection = sum(pred_collection)) %>%
   mutate(bad_debt_reserve = calc_ar-pred_collection)
-
 ar_summary %>% 
   ggplot(aes(date, bad_debt_reserve)) +
   geom_point() +
@@ -591,24 +514,36 @@ ar_summary %>%
   scale_y_continuous(label=scales::comma)+
   scale_color_viridis_d(option="plasma")+
   ggtitle( paste(company_name, ' - Bad debt estimate')) 
-
-display_table(ar_summary) 
-
+t <- display_table(ar_summary) 
+t
 ```
 
+```{r}
+# widgetframe::frameWidget(t)
+```
+
+```{r}
+htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = TRUE)
+```
+
+<!--html_preserve-->
+
+<iframe src = "https://opcpolestar.netlify.app/post/accounts-receivable-review/ar_review.html" width="400" height="500"> </frame>
+
+<!--html_preserve-->
+
+```{r}
+```
 
 Those large drops in A/R jump out even more here. Again, worth researching those.
 
 When it comes to your bad debt reserve, you  have to be very precise on dates so let's look at the last TTM periods and calculate the bad debt reserve.
 
 ```{r}
-
 ar_summary %>% 
   filter(month(date)==6 & day(date)==30) %>% 
   arrange(year(date)) %>% 
   mutate(bad_debt_expense = bad_debt_reserve - lag(bad_debt_reserve,1))
-
-
 ```
 
 So in the most recent TTM, the A/R composition has approved and we'd estimate better than expected collection, to the point we could even adjust EBITDA up 4.8K, vs the 2017 period which should have bad debt accrued for it in the range of 28K.
@@ -616,12 +551,10 @@ So in the most recent TTM, the A/R composition has approved and we'd estimate be
 And then again as FYE
 
 ```{r}
-
 ar_summary %>% 
   filter(month(date)==12 & day(date)==30) %>% 
   arrange(year(date)) %>% 
   mutate(bad_debt_expense = bad_debt_reserve - lag(bad_debt_reserve,1))
-
 ```
 
 Similar trends here, a bad 2017, with relatively good A/R composition in 2018-2019.  Now these would be adjustments to the already expensed bad debt and not surprisingly with our negative bad adjustment they actually took an $80K bad debt expense in 2018, hence why we saw such improvement in the A/R composition but what this analysis shows us is that expense should partially be spread back into 2017.
