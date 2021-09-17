@@ -1,15 +1,15 @@
 ---
-title: Accounts Receivable Review
-author: Brent Crossman
+title: "Accounts Receivable Review"
+author: "Brent Crossman"
 date: '2021-09-15'
 slug: accounts-receivable-review
 categories: []
 tags:
-  - due diligence
-  - regression
-  - accounts receivable
-  - revenue
-  - time series
+- due diligence
+- regression
+- accounts receivable
+- revenue
+- time series
 subtitle: ''
 summary: ''
 authors: []
