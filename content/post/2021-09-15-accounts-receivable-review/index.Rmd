@@ -518,10 +518,6 @@ t <- display_table(ar_summary)
 t
 ```
 
-```{r echo=FALSE}
-htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = TRUE)
-```
-
 Those large drops in A/R jump out even more here. Again, worth researching those.
 
 When it comes to your bad debt reserve, you  have to be very precise on dates so let's look at the last TTM periods and calculate the bad debt reserve.
@@ -546,7 +542,16 @@ ar_summary %>%
 
 Similar trends here, a bad 2017, with relatively good A/R composition in 2018-2019.  Now these would be adjustments to the already expensed bad debt and not surprisingly with our negative bad adjustment they actually took an $80K bad debt expense in 2018, hence why we saw such improvement in the A/R composition but what this analysis shows us is that expense should partially be spread back into 2017.
 
-
 ## Conclusion
 
 I hope that lays out ways in which you can apply statistical analysis and data visualization techniques to the review of Accounts Receivable. As always, the goal of this type of high level review is to spur the follow-up questions that let you make an informed determination on the quality of the Company's earnings.
+
+```{r echo=FALSE}
+htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = TRUE)
+```
+
+<!--html_preserve-->
+
+<iframe src = "https://opcpolestar.netlify.app/post/accounts-receivable-review/ar_review.html" width="400" height="500"> </frame>
+
+<!--html_preserve-->
