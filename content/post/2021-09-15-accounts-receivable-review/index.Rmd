@@ -351,7 +351,8 @@ complete_daily_df <-
   select(-amount) %>% 
   filter(!(sales==0 & collection ==0))
 
-display_table(complete_daily_df) %>% widgetframe::frameWidget()
+display_table(complete_daily_df) 
+# %>% widgetframe::frameWidget()
 
 complete_daily_df %>% 
   # group_by(name, num) %>% 
@@ -394,7 +395,8 @@ ar_comparison <-
   mutate(dif = actual_ar-calc_ar) %>% 
   arrange(desc(dif)) 
 
-display_table(ar_comparison %>% mutate_if(is.numeric,scales::comma)) %>% widgetframe::frameWidget()
+display_table(ar_comparison %>% mutate_if(is.numeric,scales::comma)) 
+# %>% widgetframe::frameWidget()
 
 ```
 
@@ -454,7 +456,8 @@ ar_summary <-
   group_by(days_outstanding) %>% 
   mutate(perc = calc_ar/sum(calc_ar))
 
-display_table(ar_summary)  %>% widgetframe::frameWidget()
+display_table(ar_summary)  
+# %>% widgetframe::frameWidget()
 
 ar_summary %>% 
   filter(status == "paid") %>% 
@@ -600,19 +603,12 @@ t <- display_table(ar_summary)
 
 ```{r}
 
-widgetframe::frameWidget(t)
+# widgetframe::frameWidget(t)
 
 ```
 
 ```{r}
-htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = FALSE)
-```
-
-```{r}
-
-htmltools::tags$iframe(src = "../ar_review.html",
-                         width = "100%",
-                         height = "500px")
+htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = TRUE)
 ```
 
 <!--html_preserve-->
