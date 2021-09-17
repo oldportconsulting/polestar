@@ -518,21 +518,8 @@ t <- display_table(ar_summary)
 t
 ```
 
-```{r}
-# widgetframe::frameWidget(t)
-```
-
-```{r}
+```{r echo=FALSE}
 htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = TRUE)
-```
-
-<!--html_preserve-->
-
-<iframe src = "https://opcpolestar.netlify.app/post/accounts-receivable-review/ar_review.html" width="400" height="500"> </frame>
-
-<!--html_preserve-->
-
-```{r}
 ```
 
 Those large drops in A/R jump out even more here. Again, worth researching those.
