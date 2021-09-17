@@ -64,8 +64,6 @@ These are just a few packages that we'll be using as well as a function I create
 
 library(tidyverse)
 library(DT)
-library(widgetframe)
-library(htmlwidgets)
 library(testthat)
 library(scales)
 library(janitor)
@@ -351,8 +349,7 @@ complete_daily_df <-
   select(-amount) %>% 
   filter(!(sales==0 & collection ==0))
 
-display_table(complete_daily_df) 
-# %>% widgetframe::frameWidget()
+display_table(complete_daily_df)
 
 complete_daily_df %>% 
   # group_by(name, num) %>% 
@@ -396,7 +393,6 @@ ar_comparison <-
   arrange(desc(dif)) 
 
 display_table(ar_comparison %>% mutate_if(is.numeric,scales::comma)) 
-# %>% widgetframe::frameWidget()
 
 ```
 
@@ -457,7 +453,6 @@ ar_summary <-
   mutate(perc = calc_ar/sum(calc_ar))
 
 display_table(ar_summary)  
-# %>% widgetframe::frameWidget()
 
 ar_summary %>% 
   filter(status == "paid") %>% 
@@ -597,29 +592,10 @@ ar_summary %>%
   scale_color_viridis_d(option="plasma")+
   ggtitle( paste(company_name, ' - Bad debt estimate')) 
 
-t <- display_table(ar_summary) 
+display_table(ar_summary) 
 
 ```
 
-```{r}
-
-# widgetframe::frameWidget(t)
-
-```
-
-```{r}
-htmlwidgets::saveWidget(t, "ar_review.html", selfcontained = TRUE)
-```
-
-<!--html_preserve-->
-
-<iframe src = "https://opcpolestar.netlify.app/post/accounts-receivable-review/ar_review.html" width="400" height="500"> </frame>
-
-<!--html_preserve-->
-
-```{r}
-
-```
 
 Those large drops in A/R jump out even more here. Again, worth researching those.
 
